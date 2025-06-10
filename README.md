@@ -11,6 +11,7 @@ The AI Banner Proofreader is a tool designed to help designers ensure their HTML
 3. Provide a detailed report of any spelling errors, grammatical mistakes, or typos found
 
 Try it out: (link coming soon)
+Example banner to test: https://preview.adlicious.me/Test-Banner/2025/Test-1/EN/300x600/index.html
 
 ## Features
 

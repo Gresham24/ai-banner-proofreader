@@ -12,13 +12,18 @@ const puppeteer = require("puppeteer");
 const app = express();
 const port = process.env.PORT || 8000;
 
+// Parse allowed origins from environment variable
+const allowedOrigins = process.env.ALLOWED_ORIGIN
+    ? process.env.ALLOWED_ORIGIN.split(',').map(origin => origin.trim())
+    : [];
+
 // CORS configuration
 const corsOptions = {
     origin: [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "http://localhost:8080",
-        process.env.ALLOWED_ORIGIN
+        ...allowedOrigins
     ].filter(Boolean), // Remove any undefined origins
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type", "Accept"],
@@ -35,10 +40,11 @@ const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
 
 // Function to get browser instance
 async function getBrowser() {
-    const isRailway = process.env.RAILWAY_ENVIRONMENT === 'true';
-    console.log('Environment:', isRailway ? 'Railway' : 'Local');
+    // Check if we're running locally
+    const isLocal = process.env.NODE_ENV !== 'production' && !process.env.RAILWAY_ENVIRONMENT;
+    console.log('Environment:', isLocal ? 'Local' : 'Railway');
 
-    if (isRailway) {
+    if (!isLocal) {
         console.log('Launching browser in Railway environment');
         return await puppeteer.launch({
             args: [
