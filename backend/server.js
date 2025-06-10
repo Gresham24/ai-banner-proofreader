@@ -17,14 +17,38 @@ const allowedOrigins = process.env.ALLOWED_ORIGIN
     ? process.env.ALLOWED_ORIGIN.split(',').map(origin => origin.trim())
     : [];
 
+// Add Railway domain if in production
+if (process.env.RAILWAY_ENVIRONMENT === 'production' && process.env.RAILWAY_PUBLIC_DOMAIN) {
+    allowedOrigins.push(`https://${process.env.RAILWAY_PUBLIC_DOMAIN}`);
+}
+
 // CORS configuration
 const corsOptions = {
-    origin: [
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://localhost:8080",
-        ...allowedOrigins
-    ].filter(Boolean), // Remove any undefined origins
+    origin: function (origin, callback) {
+        const whitelist = [
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+            "http://localhost:8080",
+            ...allowedOrigins
+        ].filter(Boolean);
+        
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        // In production on Railway, also allow the app's own domain
+        if (process.env.RAILWAY_ENVIRONMENT === 'production') {
+            const appUrl = process.env.RAILWAY_STATIC_URL || process.env.RAILWAY_PUBLIC_DOMAIN;
+            if (appUrl && (origin.includes(appUrl) || origin === `https://${appUrl}`)) {
+                return callback(null, true);
+            }
+        }
+        
+        if (whitelist.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type", "Accept"],
     credentials: true,
@@ -40,25 +64,55 @@ const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
 
 // Function to get browser instance
 async function getBrowser() {
-    // Check if we're running locally
-    const isLocal = process.env.NODE_ENV !== 'production' && !process.env.RAILWAY_ENVIRONMENT;
-    console.log('Environment:', isLocal ? 'Local' : 'Railway');
+    // Check if we're running on Railway
+    const isRailway = process.env.RAILWAY_ENVIRONMENT === 'production';
+    const isLocal = !isRailway && process.env.NODE_ENV !== 'production';
+    
+    console.log('Environment:', isRailway ? 'Railway' : (isLocal ? 'Local' : 'Production'));
 
-    if (!isLocal) {
+    const commonArgs = [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--disable-software-rasterizer',
+        '--disable-extensions',
+        '--single-process',
+        '--no-zygote',
+        '--disable-web-security',
+        '--disable-features=IsolateOrigins,site-per-process'
+    ];
+
+    if (isRailway) {
         console.log('Launching browser in Railway environment');
+        
+        // Try multiple possible Chromium paths on Railway
+        const possiblePaths = [
+            'chromium',
+            'chromium-browser',
+            '/usr/bin/chromium',
+            '/usr/bin/chromium-browser',
+            process.env.PUPPETEER_EXECUTABLE_PATH
+        ].filter(Boolean);
+
+        for (const chromePath of possiblePaths) {
+            try {
+                console.log(`Trying chromium at: ${chromePath}`);
+                return await puppeteer.launch({
+                    args: commonArgs,
+                    headless: "new",
+                    executablePath: chromePath
+                });
+            } catch (error) {
+                console.log(`Failed to launch with ${chromePath}:`, error.message);
+            }
+        }
+        
+        // If all paths fail, try without specifying executablePath
+        console.log('Trying with default Puppeteer chromium');
         return await puppeteer.launch({
-            args: [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-                '--disable-gpu',
-                '--disable-software-rasterizer',
-                '--disable-extensions',
-                '--single-process',
-                '--no-zygote'
-            ],
-            headless: "new",
-            executablePath: process.env.CHROME_PATH || null
+            args: commonArgs,
+            headless: "new"
         });
     }
 

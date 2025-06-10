@@ -1,0 +1,8 @@
+[phases.setup]
+nixPkgs = ["...", "chromium", "glib", "nss", "nspr", "atk", "at-spi2-atk", "cups", "drm", "dbus", "libxcb", "libxkbcommon", "x11", "xorg.libX11", "xorg.libXcomposite", "xorg.libXdamage", "xorg.libXext", "xorg.libXfixes", "xorg.libXrandr", "expat", "pango", "cairo", "alsa-lib", "at-spi2-core", "gtk3"]
+
+[phases.build]
+cmds = ["npm install"]
+
+[start]
+cmd = "npm start"
