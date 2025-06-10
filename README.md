@@ -1,6 +1,22 @@
 # AI Banner Proofreader
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://gitlab.com/GreshamT/ai-banner-proofreader)
+[![Status](https://img.shields.io/badge/status-active-success.svg)](https://banner-proofreader.onrender.com/)
+
 A web application that uses Google's Gemini AI to automatically proofread HTML5 banners for spelling errors, grammatical mistakes, and typos.
+
+## Table of Contents
+- [Description](#description)
+- [Features](#features)
+- [Demo](#demo)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Development](#development)
+- [Environment Variables](#environment-variables)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Description
 
@@ -10,9 +26,6 @@ The AI Banner Proofreader is a tool designed to help designers ensure their HTML
 2. Use Google's Gemini AI to analyze the text content
 3. Provide a detailed report of any spelling errors, grammatical mistakes, or typos found
 
-Try it out: (link coming soon)
-Example banner to test: https://preview.adlicious.me/Test-Banner/2025/Test-1/EN/300x600/index.html
-
 ## Features
 
 - Simple web interface for easy banner URL submission
@@ -21,6 +34,14 @@ Example banner to test: https://preview.adlicious.me/Test-Banner/2025/Test-1/EN/
 - Detailed proofreading reports
 - Real-time error highlighting
 - Support for publicly accessible banner URLs
+- Responsive design for all device sizes
+- Secure API key handling
+
+## Demo
+
+Try it out: https://banner-proofreader.onrender.com/
+
+Example banner to test: https://preview.adlicious.me/Test-Banner/2025/Test-1/EN/300x600/index.html
 
 ## Installation
 
@@ -38,6 +59,7 @@ npm install
 3. Create a `.env` file in the root directory and add your Google AI API key:
 ```
 GOOGLE_AI_API_KEY=your_api_key_here
+PORT=8000  # Optional, defaults to 8000
 ```
 
 ## Usage
@@ -58,15 +80,44 @@ npm run dev:all
 ## Development
 
 The project is built with:
-- Frontend: HTML, CSS (Tailwind), JavaScript
-- Backend: Node.js, Express
-- AI: Google Gemini API
-- Browser Automation: Puppeteer
+- Frontend: 
+  - HTML5
+  - CSS (Tailwind CSS v3.x)
+  - JavaScript (ES6+)
+- Backend: 
+  - Node.js (v18.x or higher)
+  - Express.js (v4.x)
+- AI: 
+  - Google Gemini API (v1.x)
+- Browser Automation: 
+  - Puppeteer (v21.x)
+- Deploymeny: 
+  - Render
 
 ## Environment Variables
 
-- `GOOGLE_AI_API_KEY`: Your Google AI API key for Gemini access
-- `PORT`: (Optional) Port number for the development server (defaults to 3000)
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `GOOGLE_AI_API_KEY` | Your Google AI API key for Gemini access | Yes | - |
+| `PORT` | Port number for the development server | No | 3000 |
+
+## Troubleshooting
+
+Common issues and their solutions:
+
+1. **API Key Issues**
+   - Ensure your Google AI API key is valid and has sufficient quota
+   - Check if the API key is properly set in the `.env` file
+
+2. **Screenshot Capture Failures**
+   - Verify the banner URL is publicly accessible
+   - Check if the banner loads properly in a browser
+   - Ensure the banner doesn't have any CORS restrictions
+
+3. **Server Connection Issues**
+   - Verify the port isn't being used by another application
+   - Check if all dependencies are properly installed
+   - Ensure you have the correct Node.js version installed
 
 ## Contributing
 
