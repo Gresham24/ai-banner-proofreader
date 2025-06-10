@@ -25,6 +25,11 @@ if (process.env.RAILWAY_ENVIRONMENT === 'production' && process.env.RAILWAY_PUBL
 // CORS configuration
 const corsOptions = {
     origin: function (origin, callback) {
+        // Handle wildcard
+        if (process.env.ALLOWED_ORIGIN === '*') {
+            return callback(null, true);
+        }
+        
         const whitelist = [
             "http://localhost:3000",
             "http://127.0.0.1:3000",
@@ -66,53 +71,25 @@ const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
 async function getBrowser() {
     // Check if we're running on Railway
     const isRailway = process.env.RAILWAY_ENVIRONMENT === 'production';
-    const isLocal = !isRailway && process.env.NODE_ENV !== 'production';
     
-    console.log('Environment:', isRailway ? 'Railway' : (isLocal ? 'Local' : 'Production'));
+    console.log('Environment:', isRailway ? 'Railway' : 'Local');
 
-    const commonArgs = [
+    const args = [
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
-        '--disable-software-rasterizer',
-        '--disable-extensions',
-        '--single-process',
+        '--no-first-run',
         '--no-zygote',
-        '--disable-web-security',
-        '--disable-features=IsolateOrigins,site-per-process'
+        '--single-process',
+        '--disable-extensions'
     ];
 
     if (isRailway) {
         console.log('Launching browser in Railway environment');
-        
-        // Try multiple possible Chromium paths on Railway
-        const possiblePaths = [
-            'chromium',
-            'chromium-browser',
-            '/usr/bin/chromium',
-            '/usr/bin/chromium-browser',
-            process.env.PUPPETEER_EXECUTABLE_PATH
-        ].filter(Boolean);
-
-        for (const chromePath of possiblePaths) {
-            try {
-                console.log(`Trying chromium at: ${chromePath}`);
-                return await puppeteer.launch({
-                    args: commonArgs,
-                    headless: "new",
-                    executablePath: chromePath
-                });
-            } catch (error) {
-                console.log(`Failed to launch with ${chromePath}:`, error.message);
-            }
-        }
-        
-        // If all paths fail, try without specifying executablePath
-        console.log('Trying with default Puppeteer chromium');
         return await puppeteer.launch({
-            args: commonArgs,
-            headless: "new"
+            headless: 'new',
+            args: args
         });
     }
 
