@@ -16,8 +16,10 @@ const port = process.env.PORT || 8000;
 const corsOptions = {
     origin: [
         "http://localhost:3000",
-        "http://127.0.0.1:3000"
-    ],
+        "http://127.0.0.1:3000",
+        "http://localhost:8080",
+        process.env.ALLOWED_ORIGIN
+    ].filter(Boolean), // Remove any undefined origins
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type", "Accept"],
     credentials: true,
@@ -33,6 +35,28 @@ const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
 
 // Function to get browser instance
 async function getBrowser() {
+    const isRailway = process.env.RAILWAY_ENVIRONMENT === 'true';
+    console.log('Environment:', isRailway ? 'Railway' : 'Local');
+
+    if (isRailway) {
+        console.log('Launching browser in Railway environment');
+        return await puppeteer.launch({
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-gpu',
+                '--disable-software-rasterizer',
+                '--disable-extensions',
+                '--single-process',
+                '--no-zygote'
+            ],
+            headless: "new",
+            executablePath: process.env.CHROME_PATH || null
+        });
+    }
+
+    // For local development
     const os = require("os");
     const platform = os.platform();
 
@@ -58,6 +82,7 @@ async function getBrowser() {
         };
 
         const chromePath = findChrome();
+        console.log('Launching browser in local macOS environment');
 
         return await puppeteer.launch({
             executablePath: chromePath,
@@ -65,7 +90,7 @@ async function getBrowser() {
             args: ["--no-sandbox", "--disable-setuid-sandbox"]
         });
     } else {
-        // For other local environments
+        console.log('Launching browser in local non-macOS environment');
         return await puppeteer.launch({
             headless: "new",
             args: ["--no-sandbox", "--disable-setuid-sandbox"]

@@ -9,8 +9,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const resultsArea = document.getElementById('results-area');
   const loadingIndicator = document.getElementById('loading');
   
-  // API endpoint URL
-  const API_ENDPOINT = 'http://localhost:8000/api/proofread';
+  // Get API endpoint URL based on environment
+  function getApiEndpoint() {
+    const hostname = window.location.hostname;
+    const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
+    const port = isLocal ? ':8000' : '';
+    const protocol = window.location.protocol;
+    
+    return `${protocol}//${hostname}${port}/api/proofread`;
+  }
   
   // Event Listeners
   submitButton.addEventListener('click', handleSubmit);
@@ -42,10 +49,11 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
     
     try {
-      console.log('Making request to:', API_ENDPOINT);
+      const apiEndpoint = getApiEndpoint();
+      console.log('Making request to:', apiEndpoint);
       
       // Send request to endpoint
-      const response = await fetch(API_ENDPOINT, {
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
