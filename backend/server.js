@@ -6,8 +6,9 @@ const fs = require('fs');
 require("dotenv").config();
 const path = require("path");
 
-// Import puppeteer
-const puppeteer = require("puppeteer");
+// Import puppeteer-core and the chromium spawner
+const puppeteer = require("puppeteer-core");
+const chromium = require("@sparticuz/chromium");
 
 const app = express();
 const port = process.env.PORT || 8000;
@@ -67,72 +68,16 @@ app.use(express.static(path.join(__dirname, "../frontend")));
 // Initialize Google Generative AI
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
 
-// Function to get browser instance
+// Function to get browser instance (NEW VERSION)
 async function getBrowser() {
-    // Check if we're running on Railway
-    const isRailway = process.env.RAILWAY_ENVIRONMENT === 'production';
-    
-    console.log('Environment:', isRailway ? 'Railway' : 'Local');
-
-    const args = [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--no-first-run',
-        '--no-zygote',
-        '--single-process',
-        '--disable-extensions'
-    ];
-
-    if (isRailway) {
-        console.log('Launching browser in Railway environment');
-        return await puppeteer.launch({
-            headless: 'new',
-            args: args
-        });
-    }
-
-    // For local development
-    const os = require("os");
-    const platform = os.platform();
-
-    if (platform === "darwin") {
-        const findChrome = () => {
-            const chromeLocations = [
-                "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-                "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
-                "/Applications/Chromium.app/Contents/MacOS/Chromium",
-            ];
-
-            for (const path of chromeLocations) {
-                try {
-                    if (require("fs").existsSync(path)) {
-                        console.log(`Found Chrome at: ${path}`);
-                        return path;
-                    }
-                } catch (e) {
-                    // Ignore errors
-                }
-            }
-            return null;
-        };
-
-        const chromePath = findChrome();
-        console.log('Launching browser in local macOS environment');
-
-        return await puppeteer.launch({
-            executablePath: chromePath,
-            headless: "new",
-            args: ["--no-sandbox", "--disable-setuid-sandbox"]
-        });
-    } else {
-        console.log('Launching browser in local non-macOS environment');
-        return await puppeteer.launch({
-            headless: "new",
-            args: ["--no-sandbox", "--disable-setuid-sandbox"]
-        });
-    }
+    console.log('Launching browser...');
+    return await puppeteer.launch({
+        args: chromium.args,
+        defaultViewport: chromium.defaultViewport,
+        executablePath: await chromium.executablePath(),
+        headless: chromium.headless,
+        ignoreHTTPSErrors: true,
+    });
 }
 
 // Function to capture screenshots over a specified duration
